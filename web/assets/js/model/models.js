@@ -162,7 +162,7 @@ class AllSetting {
         this.webPort = 54333;
         this.webCertFile = "";
         this.webKeyFile = "";
-        this.webBasePath = "/";
+        this.webBasePath = "/x-ui-panel/";
 
         this.xrayTemplateConfig = "";
 
