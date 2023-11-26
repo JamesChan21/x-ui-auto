@@ -3,6 +3,9 @@ import requests
 from urllib.parse import urlencode, quote
 import uuid
 import json
+import base64
+
+uuid = ""
 
 def login(session, ip, port, username, password):
     url = f"http://{ip}:{port}/login"
@@ -37,7 +40,9 @@ def update_setting(session, ip, port, webBasePath, current_config):
     print(f"Update Setting Response: {response.text}")
 
 def update_xray(session, ip, port, wsPath, host):
+    global uuid
     url = f"http://{ip}:{port}/xui/inbound/add"
+    uuid = str(uuid.uuid4())
     data1 = {
         "up": 0,
         "down": 0,
@@ -51,7 +56,7 @@ def update_xray(session, ip, port, wsPath, host):
     }
     data2 = {
         "settings": {
-            "clients": [{"id": str(uuid.uuid4()), "alterId": 0}],
+            "clients": [{"id": uuid, "alterId": 0}],
             "disableInsecureEncryption": False
         },
         "streamSettings": {
@@ -68,6 +73,22 @@ def update_xray(session, ip, port, wsPath, host):
     print(f"Update Xray Status Code: {response.status_code}")
     print(f"Update Xray Response: {response.text}")
 
+    def save_vmess(vmess_config, file_path):
+        # 将配置信息转换为JSON字符串
+        config_json = json.dumps(vmess_config)
+
+        # 对JSON字符串进行Base64编码
+        base64_config = base64.urlsafe_b64encode(config_json.encode()).decode()
+
+        # 拼接VMess链接
+        vmess_link = f"vmess://{base64_config}"
+
+        # 保存VMess链接到文件
+        with open(file_path, 'w') as file:
+            file.write(vmess_link)
+
+        print(f"VMess链接已保存到文件: {file_path}")
+
 if __name__ == "__main__":
     if len(sys.argv) != 8:
         print("Usage: python3 script.py ip port username password webBasePath wsPath host")
@@ -83,8 +104,23 @@ if __name__ == "__main__":
             sys.exit(1)
 
         print(f"Starting with IP: {ip}, Port: {port}, Username: {username}, Password: {password}, Web Base Path: {webBasePath}, WS Path: {wsPath}, Host: {host}")
-        
-        login(session, ip, port, username, password)
-        config = get_current_config(session, ip, port)
-        update_setting(session, ip, port, webBasePath, config["obj"])
-        update_xray(session, ip, port, wsPath, host)
+        local_ip = "127.0.0.1"
+        login(session, local_ip, port, username, password)
+        config = get_current_config(session, local_ip, port)
+        update_setting(session, local_ip, port, webBasePath, config["obj"])
+        update_xray(session, local_ip, port, wsPath, host)
+
+        # 保存VMess链接到文件
+        save_vmess({
+            "v": "2",
+            "ps": "vmess",
+            "add": ip,
+            "port": port,
+            "id": uuid,
+            "aid": 0,
+            "net": "ws",
+            "type": "none",
+            "host": host,
+            "path": wsPath,
+            "tls": "none"
+        }, 'vmess_address.txt')

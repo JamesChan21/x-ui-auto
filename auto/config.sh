@@ -18,8 +18,10 @@ SECOND_DOMAIN_KEY="$CERT_PATH$SECOND_DOMAIN.key"
 
 CF_EMAIL="xxxxxxxxxxx@qq.com"
 CF_API_ID="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+CF_ZONE_ID="XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 # x-ui-panal Configuration
 # USERNAME="admin"
 # PASSWORD="admin"
+WEB_IP=$(curl ifconfig.co)
 WEB_PORT="54333"

@@ -39,10 +39,13 @@ firewall-cmd --list-all
 
 # configure x-ui
 cd auto
-python3 x-ui-api.py 127.0.0.1 $WEB_PORT admin admin $WEB_URI/ $WS_URI $SUB_DOMAIN
+python3 x-ui-api.py $WEB_IP $WEB_PORT admin admin $WEB_URI/ $WS_URI $SUB_DOMAIN
 
 # configure nginx engine
 ./conf_nginx.sh
+
+# record dns in cloudflare
+./cloudflare_dns_record.sh
 
 # install bbr
 ./install_bbr.sh
