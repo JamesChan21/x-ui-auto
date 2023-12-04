@@ -1,9 +1,21 @@
 #!/bin/bash
 source ./config.sh
+
+# close SELINUX
 setenforce 0
+sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
+
+# environment configuration
+yum -y install expect
+yum -y install net-tools
+yum -y install python3-devel libjpeg-devel zlib-devel gcc
+pip3 install qrcode
+pip3 install Pillow
+curl -fsSL https://get.docker.com | sh
+sudo systemctl enable docker
+sudo systemctl start docker
 mkdir -p ~/docker/xui/db  ~/docker/xui/cert ~/docker/xui/config
 chmod 776 -R ~/docker/xui/db  ~/docker/xui/cert ~/docker/xui/config
-yum -y install expect
 curl -o bbr.sh https://raw.githubusercontent.com/teddysun/across/master/bbr.sh 
 chmod 777 *.sh
 
@@ -11,15 +23,10 @@ chmod 777 *.sh
 ./create_ssl_cert.sh<<EOF
 y
 $CERT_PATH
-$SECOND_DOMAIN
+$DOMAIN
 $CF_API_ID
 $CF_EMAIL
 EOF
-
-# download docker & x-ui-auto
-curl -fsSL https://get.docker.com | sh
-sudo systemctl enable docker
-sudo systemctl start docker
 
 # docker build x-ui-auto
 cd ..
@@ -31,17 +38,14 @@ docker run -itd --network=host \
 --name x-ui-auto --restart=unless-stopped \
 x-ui-auto:v1
 
-# enable $WEB_PORT/443 port
+# firewall setting
 #sudo firewall-cmd --zone=public --add-port=$WEB_PORT/tcp --add-port=443/tcp --permanent
 sudo firewall-cmd --zone=public --add-port=443/tcp --permanent
 sudo firewall-cmd --reload
 firewall-cmd --list-all
 
-# configure x-ui
-cd auto
-python3 x-ui-api.py $WEB_IP $WEB_PORT admin admin $WEB_URI/ $WS_URI $SUB_DOMAIN
-
 # configure nginx engine
+cd auto
 ./conf_nginx.sh
 
 # record dns in cloudflare
@@ -49,3 +53,22 @@ python3 x-ui-api.py $WEB_IP $WEB_PORT admin admin $WEB_URI/ $WS_URI $SUB_DOMAIN
 
 # install bbr
 ./install_bbr.sh
+
+# configure x-ui
+python3 x-ui-api.py $WEB_IP $WEB_PORT admin admin $WS_PORT $WEB_URI/ $WS_URI $DOMAIN
+
+# send email
+python3 smtp.py $SMTP_SERVER \
+                $SMTP_PORT \
+                $SMTP_USERNAME \
+                $SMTP_PASSWORD \
+                $SENDER_EMAIL \
+                $RECEIVER_EMAIL \
+                "Your vmess server configuration is done!" \
+                "$(cat ./vmess_address.txt)" \
+                "./vmess_qrcode.jpg"
+ 
+# reboot to activate bbr
+echo "Congratulations! Everything is settled down!"
+echo "Now reboot machine to activate bbr"
+reboot

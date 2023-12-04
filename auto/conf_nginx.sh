@@ -7,9 +7,9 @@ mkdir -p /var/www/$WEB_NAME
 unzip $WEB_FILE -d /var/www/$WEB_NAME
 
 cp ./nginx.conf.template ./nginx.conf.template.bak
-sed -i "s|\#sub_domain|${SUB_DOMAIN}|g" ./nginx.conf.template.bak
-sed -i "s|\#second_domain_cer|${SECOND_DOMAIN_CER}|g" ./nginx.conf.template.bak
-sed -i "s|\#second_domain_key|${SECOND_DOMAIN_KEY}|g" ./nginx.conf.template.bak
+sed -i "s|\#domain|${DOMAIN}|g" ./nginx.conf.template.bak
+sed -i "s|\#cer|${DOMAIN_CER}|g" ./nginx.conf.template.bak
+sed -i "s|\#key|${DOMAIN_KEY}|g" ./nginx.conf.template.bak
 sed -i "s|\#web_name|${WEB_NAME}|g" ./nginx.conf.template.bak
 sed -i "s|\#web_uri|${WEB_URI}|g" ./nginx.conf.template.bak
 sed -i "s|\#web_port|${WEB_PORT}|g" ./nginx.conf.template.bak

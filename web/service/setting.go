@@ -27,7 +27,7 @@ var defaultValueMap = map[string]string{
 	"webCertFile":        "",
 	"webKeyFile":         "",
 	"secret":             random.Seq(32),
-	"webBasePath":        "/x-ui-panel/",
+	"webBasePath":        "/",
 	"timeLocation":       "Asia/Shanghai",
 }
 

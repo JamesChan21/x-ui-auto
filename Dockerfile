@@ -11,4 +11,5 @@ WORKDIR /root
 COPY --from=builder  /root/main /root/x-ui
 COPY bin/. /root/bin/.
 VOLUME [ "/etc/x-ui" ]
+RUN echo 'DOCKER_OPTS="--ipv6=false"' >> /etc/default/docker
 CMD [ "./x-ui" ]

@@ -332,7 +332,7 @@ func (s *Server) Start() (err error) {
 		return err
 	}
 	listenAddr := net.JoinHostPort(listen, strconv.Itoa(port))
-	listener, err := net.Listen("tcp", listenAddr)
+	listener, err := net.Listen("tcp4", listenAddr)
 	if err != nil {
 		return err
 	}

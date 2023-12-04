@@ -6,4 +6,4 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --header 'X-Auth-Email: '${CF_EMAIL} \
   --header 'X-Auth-KEY: '${CF_API_ID} \
-  --data "{\"type\":\"A\",\"name\":\"${SUB_DOMAIN}\",\"content\":\"${WEB_IP}\",\"ttl\":1,\"proxied\":true}"
+  --data "{\"type\":\"A\",\"name\":\"${DOMAIN}\",\"content\":\"${WEB_IP}\",\"ttl\":1,\"proxied\":true}"

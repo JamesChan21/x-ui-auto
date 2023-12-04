@@ -5,5 +5,5 @@ spawn ./bbr.sh
 expect "Press any key to start...or Press Ctrl+C to cancel"
 send "\r"
 expect "*restart*"
-send "y\r"
+send "n\r"
 expect eof

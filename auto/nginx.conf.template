@@ -37,10 +37,10 @@ http {
 
     server {
     listen 443 ssl;
-    server_name #sub_domain;
+    server_name #domain;
 
-    ssl_certificate #second_domain_cer;
-    ssl_certificate_key #second_domain_key;
+    ssl_certificate #cer;
+    ssl_certificate_key #key;
 
     location / {
         root /var/www/#web_name;

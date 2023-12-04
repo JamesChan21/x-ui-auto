@@ -4,8 +4,11 @@ from urllib.parse import urlencode, quote
 import uuid
 import json
 import base64
+import qrcode
 
-uuid = ""
+g_id = str(uuid.uuid4())
+g_vmess_addr_filename = "vmess_address.txt"
+g_vmess_qrcode_filename = "vmess_qrcode.jpg"
 
 def login(session, ip, port, username, password):
     url = f"http://{ip}:{port}/login"
@@ -39,10 +42,9 @@ def update_setting(session, ip, port, webBasePath, current_config):
     print(f"Update Setting Status Code: {response.status_code}")
     print(f"Update Setting Response: {response.text}")
 
-def update_xray(session, ip, port, wsPath, host):
-    global uuid
+def update_xray(session, ip, port, proxyPort, wsPath, host):
+    global g_id
     url = f"http://{ip}:{port}/xui/inbound/add"
-    uuid = str(uuid.uuid4())
     data1 = {
         "up": 0,
         "down": 0,
@@ -51,12 +53,12 @@ def update_xray(session, ip, port, wsPath, host):
         "enable": True,
         "expiryTime": 0,
         "listen": "",
-        "port": 45625,
+        "port": proxyPort,
         "protocol": "vmess"
     }
     data2 = {
         "settings": {
-            "clients": [{"id": uuid, "alterId": 0}],
+            "clients": [{"id": g_id, "alterId": 0}],
             "disableInsecureEncryption": False
         },
         "streamSettings": {
@@ -73,28 +75,30 @@ def update_xray(session, ip, port, wsPath, host):
     print(f"Update Xray Status Code: {response.status_code}")
     print(f"Update Xray Response: {response.text}")
 
-    def save_vmess(vmess_config, file_path):
-        # 将配置信息转换为JSON字符串
-        config_json = json.dumps(vmess_config)
-
-        # 对JSON字符串进行Base64编码
-        base64_config = base64.urlsafe_b64encode(config_json.encode()).decode()
-
-        # 拼接VMess链接
-        vmess_link = f"vmess://{base64_config}"
-
-        # 保存VMess链接到文件
-        with open(file_path, 'w') as file:
-            file.write(vmess_link)
-
-        print(f"VMess链接已保存到文件: {file_path}")
+def save_vmess(vmess_config, file_path):
+    config_json = json.dumps(vmess_config)
+    base64_config = base64.urlsafe_b64encode(config_json.encode()).decode()
+    vmess_link = f"vmess://{base64_config}"
+    with open(file_path, 'w') as file:
+        file.write(vmess_link)
+    print("Vmess addr:", vmess_link)
+    print("Vmess QRcode:")
+    # print qrcode to terminal
+    qr = qrcode.QRCode()
+    qr.border = 1
+    qr.add_data(vmess_link)
+    qr.make()
+    qr.print_ascii(out=None, tty=False, invert=True)
+    # save qrcode to jpg
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(g_vmess_qrcode_filename)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 8:
-        print("Usage: python3 script.py ip port username password webBasePath wsPath host")
+    if len(sys.argv) != 9:
+        print("Usage: python3 script.py ip port username password proxyPort webBasePath wsPath host")
         sys.exit(1)
 
-    ip, port, username, password, webBasePath, wsPath, host = sys.argv[1:]
+    ip, port, username, password, proxyPort, webBasePath, wsPath, host = sys.argv[1:]
 
     with requests.Session() as session:
         try:
@@ -103,24 +107,24 @@ if __name__ == "__main__":
             print("Error: Port must be an integer.")
             sys.exit(1)
 
-        print(f"Starting with IP: {ip}, Port: {port}, Username: {username}, Password: {password}, Web Base Path: {webBasePath}, WS Path: {wsPath}, Host: {host}")
+        print(f"Starting with IP: {ip}, Port: {port}, Username: {username}, Password: {password}, proxyPort: {proxyPort}, Web Base Path: {webBasePath}, WS Path: {wsPath}, Host: {host}")
         local_ip = "127.0.0.1"
         login(session, local_ip, port, username, password)
         config = get_current_config(session, local_ip, port)
         update_setting(session, local_ip, port, webBasePath, config["obj"])
-        update_xray(session, local_ip, port, wsPath, host)
+        update_xray(session, local_ip, port, proxyPort, wsPath, host)
 
         # 保存VMess链接到文件
         save_vmess({
             "v": "2",
             "ps": "vmess",
-            "add": ip,
-            "port": port,
-            "id": uuid,
+            "add": host,
+            "port": 443,
+            "id": g_id,
             "aid": 0,
             "net": "ws",
             "type": "none",
             "host": host,
             "path": wsPath,
-            "tls": "none"
-        }, 'vmess_address.txt')
+            "tls": "tls"
+        }, g_vmess_addr_filename)
