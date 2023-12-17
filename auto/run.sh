@@ -6,11 +6,15 @@ setenforce 0
 sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
 
 # environment configuration
+export PYTHONIOENCODING=utf-8
+echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+sudo localedef -i en_US -f UTF-8 en_US.UTF-8
 yum -y install expect
 yum -y install net-tools
 yum -y install python3-devel libjpeg-devel zlib-devel gcc
 pip3 install qrcode
 pip3 install Pillow
+pip3 install requests
 curl -fsSL https://get.docker.com | sh
 sudo systemctl enable docker
 sudo systemctl start docker
